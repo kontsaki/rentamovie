@@ -9,4 +9,7 @@ WORKDIR /opt/rentamovie
 RUN poetry config virtualenvs.create false
 RUN poetry install
 
-CMD uvicorn --reload app:main
+ENV PYTHONPATH=src
+ENV APP_SECRET=my-very-secret-dev-app-secret
+EXPOSE 8000/tcp
+CMD uvicorn --reload rentamovie:app --reload-dir src --log-level debug --host 0.0.0.0

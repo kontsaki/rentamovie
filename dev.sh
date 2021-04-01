@@ -29,5 +29,6 @@ else
     -v `pwd`:/opt/rentamovie/ \
     -w /opt/rentamovie/ \
     --network bridge \
+    -p 8000:8000 \
     rentamovie
 fi

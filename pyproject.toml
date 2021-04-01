@@ -8,19 +8,27 @@ authors = ["Konstantinos Tsakiltzidis <kontsaki@pm.me>"]
 python = "^3.8"
 fastapi = {extras = ["all"], version = "^0.63.0"}
 tortoise-orm = {extras = ["aiosqlite"], version = "^0.17.1"}
+fastapi-users = {extras = ["tortoise-orm"], version = "^5.1.3"}
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pytest = "6.2.2"
+asynctest = "^0.13.0"
+ipython = "^7.22.0"
+ipdb = "^0.13.7"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "--disable-warnings"
 
 [tool.pylint.master]
 init-hook = """
 import os, sys
 root = os.getcwd()
 for path in [
+    '.',
     'src',
     'tests/',
 ]:
@@ -28,10 +36,12 @@ for path in [
 """
 
 disable = """
+import-error,
 missing-module-docstring,
 missing-class-docstring,
 missing-function-docstring,
 logging-fstring-interpolation,
 wrong-import-order,
 arguments-differ,
+too-few-public-methods,
 """
