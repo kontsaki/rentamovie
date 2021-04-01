@@ -6,6 +6,8 @@ authors = ["Konstantinos Tsakiltzidis <kontsaki@pm.me>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+fastapi = {extras = ["all"], version = "^0.63.0"}
+tortoise-orm = {extras = ["aiosqlite"], version = "^0.17.1"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -13,3 +15,23 @@ pytest = "^5.2"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pylint.master]
+init-hook = """
+import os, sys
+root = os.getcwd()
+for path in [
+    'src',
+    'tests/',
+]:
+    sys.path.append(f'{root}/{path}')
+"""
+
+disable = """
+missing-module-docstring,
+missing-class-docstring,
+missing-function-docstring,
+logging-fstring-interpolation,
+wrong-import-order,
+arguments-differ,
+"""

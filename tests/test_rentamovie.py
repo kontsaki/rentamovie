@@ -1,5 +1,9 @@
-from rentamovie import __version__
+from rentamovie import app
+from fastapi.testing import TestClient
+
+
+client = TestClient(app)
 
 
 def test_version():
-    assert __version__ == '0.1.0'
+    assert client.get("/").status_code == 200
