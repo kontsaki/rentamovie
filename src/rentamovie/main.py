@@ -54,6 +54,13 @@ async def list_movies():
     return await serializers.MovieList.from_queryset(movies_queryset)
 
 
+@app.get("/movies/{movie_id}")
+async def movie_details(movie_id: int):
+    """List all available for renting movies."""
+    movie = await models.Movie.get(id=movie_id)
+    return await serializers.Movie.from_tortoise_orm(movie)
+
+
 @app.get("/movies/rent/{movie_id}")
 async def rent_movie(movie_id: int, user: serializers.User = Depends(current_user)):
     """Rent a specific movie."""

@@ -65,8 +65,25 @@ def test_list_movies(client, event_loop):
             "id": pk,
             "title": title,
         }
-        for pk, (title, _, _) in enumerate(SAMPLE_MOVIES, start=1)
+        for pk, (title, *_) in enumerate(SAMPLE_MOVIES, start=1)
     ]
+
+
+def test_movie_details(client, event_loop):
+    event_loop.run_until_complete(create_movies())
+    movie_id = 1
+
+    response = client.get(f"/movies/{movie_id}")
+
+    assert response.status_code == 200
+
+    title, year, genre = SAMPLE_MOVIES[movie_id - 1]
+    assert response.json() == {
+        "id": movie_id,
+        "title": title,
+        "year": year,
+        "genre": genre,
+    }
 
 
 def test_rent_movie(client, event_loop):
@@ -78,10 +95,7 @@ def test_rent_movie(client, event_loop):
     assert response.status_code == 200
 
     title, year, genre = SAMPLE_MOVIES[movie_id - 1]
-    movie = {
-        "id": movie_id,
-        "title": title,
-    }
+    movie = {"id": movie_id, "title": title}
     assert response.json() == {**movie, "year": year, "genre": genre}
 
     response = client.get("/me/movies/")
