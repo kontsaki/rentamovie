@@ -1,3 +1,5 @@
+from typing import Dict, Optional, Union
+
 from fastapi import FastAPI, Depends
 from tortoise.contrib.fastapi import register_tortoise
 from fastapi_users import FastAPIUsers
@@ -48,9 +50,14 @@ current_user = fastapi_users.current_user()
 
 
 @app.get("/movies")
-async def list_movies():
+async def list_movies(genre: Optional[str] = None, year: Optional[int] = None):
     """List all available for renting movies."""
-    movies_queryset = models.Movie.all()
+    query: Dict[str, Union[str, int]] = {}
+    if year:
+        query["year"] = year
+    if genre:
+        query["genre"] = genre
+    movies_queryset = models.Movie.filter(**query)
     return await serializers.MovieList.from_queryset(movies_queryset)
 
 

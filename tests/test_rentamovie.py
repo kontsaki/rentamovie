@@ -45,7 +45,7 @@ def event_loop(client: TestClient) -> Generator:
 SAMPLE_MOVIES = (
     ("The Hitchhiker's Guide To The Galaxy", 2005, "comedy"),
     ("Halloween", 1978, "horror"),
-    ("Assassin's Creed", 2016, "action"),
+    ("Kung Fu Hustle", 2005, "action"),
 )
 
 
@@ -66,6 +66,38 @@ def test_list_movies(client, event_loop):
             "title": title,
         }
         for pk, (title, *_) in enumerate(SAMPLE_MOVIES, start=1)
+    ]
+
+
+def test_list_movies_filter_by_year(client, event_loop):
+    event_loop.run_until_complete(create_movies())
+
+    response = client.get("/movies?year=2005")
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": pk,
+            "title": title,
+        }
+        for pk, (title, year, _) in enumerate(SAMPLE_MOVIES, start=1)
+        if year == 2005
+    ]
+
+
+def test_list_movies_filter_by_year_and_genre(client, event_loop):
+    event_loop.run_until_complete(create_movies())
+
+    response = client.get("/movies?year=2005&genre=action")
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": pk,
+            "title": title,
+        }
+        for pk, (title, year, genre) in enumerate(SAMPLE_MOVIES, start=1)
+        if year == 2005 and genre == "action"
     ]
 
 
