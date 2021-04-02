@@ -88,36 +88,41 @@ def test_movie_details(client, event_loop):
 
 def test_rent_movie(client, event_loop):
     event_loop.run_until_complete(create_movies())
-    movie_id = 1
+    sample_movies = enumerate(SAMPLE_MOVIES, start=1)
 
-    response = client.get(f"/movies/rent/{movie_id}")
+    movie_id, (title, year, genre) = next(sample_movies)
+    movie = {"id": movie_id, "title": title, "year": year, "genre": genre}
 
-    assert response.status_code == 200
+    response = client.post("/movies/rent/", json=movie)
 
-    title, year, genre = SAMPLE_MOVIES[movie_id - 1]
-    movie = {"id": movie_id, "title": title}
-    assert response.json() == {**movie, "year": year, "genre": genre}
+    assert response.status_code == 200, response.json()
+
+    assert response.json() == movie
 
     response = client.get("/me/movies/")
 
     assert response.status_code == 200
-    assert response.json() == [movie]
+    assert response.json() == [{"id": movie["id"], "title": movie["title"]}]
 
     # rent one more
-    movie_id = 2
+    movie_id, (title, year, genre) = next(sample_movies)
+    new_movie = {"id": movie_id, "title": title, "year": year, "genre": genre}
 
-    response = client.get(f"/movies/rent/{movie_id}")
+    response = client.post("/movies/rent/", json=new_movie)
 
     assert response.status_code == 200
 
-    title, year, genre = SAMPLE_MOVIES[movie_id - 1]
-    new_movie = {
+    assert response.json() == {
         "id": movie_id,
         "title": title,
+        "year": year,
+        "genre": genre,
     }
-    assert response.json() == {**new_movie, "year": year, "genre": genre}
 
     response = client.get("/me/movies/")
 
     assert response.status_code == 200
-    assert response.json() == [movie, new_movie]
+    assert response.json() == [
+        {"id": movie["id"], "title": movie["title"]},
+        {"id": new_movie["id"], "title": new_movie["title"]},
+    ]

@@ -61,10 +61,12 @@ async def movie_details(movie_id: int):
     return await serializers.Movie.from_tortoise_orm(movie)
 
 
-@app.get("/movies/rent/{movie_id}")
-async def rent_movie(movie_id: int, user: serializers.User = Depends(current_user)):
+@app.post("/movies/rent/")
+async def rent_movie(
+    movie: serializers.Movie, user: serializers.User = Depends(current_user)  # type: ignore
+):
     """Rent a specific movie."""
-    movie = await models.Movie.get(id=movie_id)
+    movie = await models.Movie.get(id=movie.id)  # type: ignore
     user = await models.User.get(id=user.id)
     await models.Rent.create(movie=movie, user=user)
     return await serializers.Movie.from_tortoise_orm(movie)
