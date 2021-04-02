@@ -6,7 +6,7 @@ from tortoise import fields
 
 
 class User(TortoiseBaseUserModel):
-    pass
+    balance = fields.FloatField(default=0.0)
 
 
 class Movie(Model):

@@ -1,5 +1,6 @@
 # pylint: disable=redefined-outer-name invalid-name
 from typing import Generator
+from datetime import date, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -103,15 +104,13 @@ def test_list_movies_filter_by_year_and_genre(client, event_loop):
 
 def test_movie_details(client, event_loop):
     event_loop.run_until_complete(create_movies())
-    movie_id = 1
 
-    response = client.get(f"/movies/{movie_id}")
+    response = client.get("/movies/1")
 
     assert response.status_code == 200
-
-    title, year, genre = SAMPLE_MOVIES[movie_id - 1]
+    title, year, genre = SAMPLE_MOVIES[0]
     assert response.json() == {
-        "id": movie_id,
+        "id": 1,
         "title": title,
         "year": year,
         "genre": genre,
@@ -125,13 +124,12 @@ def test_rent_movie(client, event_loop):
     movie_id, (title, year, genre) = next(sample_movies)
     movie = {"id": movie_id, "title": title, "year": year, "genre": genre}
 
-    response = client.post("/movies/rent/", json=movie)
+    response = client.post("/movies/rent", json={"id": movie["id"]})
 
     assert response.status_code == 200, response.json()
-
     assert response.json() == movie
 
-    response = client.get("/me/movies/")
+    response = client.get("/users/me/movies")
 
     assert response.status_code == 200
     assert response.json() == [{"id": movie["id"], "title": movie["title"]}]
@@ -140,10 +138,9 @@ def test_rent_movie(client, event_loop):
     movie_id, (title, year, genre) = next(sample_movies)
     new_movie = {"id": movie_id, "title": title, "year": year, "genre": genre}
 
-    response = client.post("/movies/rent/", json=new_movie)
+    response = client.post("/movies/rent", json={"id": new_movie["id"]})
 
     assert response.status_code == 200
-
     assert response.json() == {
         "id": movie_id,
         "title": title,
@@ -151,10 +148,68 @@ def test_rent_movie(client, event_loop):
         "genre": genre,
     }
 
-    response = client.get("/me/movies/")
+    response = client.get("/users/me/movies")
 
     assert response.status_code == 200
     assert response.json() == [
         {"id": movie["id"], "title": movie["title"]},
         {"id": new_movie["id"], "title": new_movie["title"]},
     ]
+
+
+def test_get_user_balance(client):
+    response = client.get("/users/me")
+
+    assert response.status_code == 200
+    print(response.json())
+    assert response.json()["balance"] == 0
+
+
+def test_return_movie(client, event_loop):
+    event_loop.run_until_complete(create_movies())
+    title, year, genre = SAMPLE_MOVIES[0]
+    assert client.post("/movies/rent", json={"id": 1}).status_code == 200
+    assert client.get("/users/me/movies").json() == [{"id": 1, "title": title}]
+
+    response = client.post("/movies/return", json={"id": 1})
+
+    assert response.status_code == 200, response.headers
+    assert response.json() == {
+        "id": 1,
+        "title": title,
+        "year": year,
+        "genre": genre,
+    }
+
+    assert client.get("/users/me/movies").json() == []
+    assert client.get("/users/me").json()["balance"] == -1.0
+
+
+async def create_rent(movie_id, days):
+    user = await models.User.get(email=TEST_USER_EMAIL)
+    movie = await models.Movie.get(id=movie_id)
+    past = date.today() - timedelta(days=days)
+    await models.Rent.create(user=user, movie=movie, date=past)
+
+
+@pytest.mark.parametrize(
+    "days, cost",
+    [
+        (1, 1.0),
+        (2, 2.0),
+        (3, 3.0),
+        (4, 3.5),
+        (5, 4.0),
+        (6, 4.5),
+    ],
+)
+def test_return_movie_cost_per_day(days, cost, client, event_loop):
+    event_loop.run_until_complete(create_movies())
+    event_loop.run_until_complete(create_rent(movie_id=1, days=days))
+
+    response = client.post("/movies/return", json={"id": 1})
+
+    assert response.status_code == 200, response.headers
+    assert client.get("/users/me").json()["balance"] == -cost
+
+    assert client.get(f"/movies/cost/{days}").text == str(cost)

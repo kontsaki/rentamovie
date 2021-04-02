@@ -1,11 +1,12 @@
 from fastapi_users.models import BaseUser, BaseUserDB, BaseUserCreate, BaseUserUpdate
 from tortoise.contrib.pydantic import pydantic_model_creator, pydantic_queryset_creator
+from pydantic import BaseModel
 
 from . import models
 
 
 class User(BaseUser):
-    pass
+    balance: float = 0
 
 
 class UserDB(User, BaseUserDB):
@@ -18,6 +19,10 @@ class UserCreate(BaseUserCreate):
 
 class UserUpdate(User, BaseUserUpdate):
     pass
+
+
+class MovieID(BaseModel):
+    id: int
 
 
 Movie = pydantic_model_creator(models.Movie, name="Movie")

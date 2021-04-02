@@ -1,4 +1,6 @@
 from typing import Dict, Optional, Union
+from datetime import date
+from itertools import chain, repeat, islice
 
 from fastapi import FastAPI, Depends
 from tortoise.contrib.fastapi import register_tortoise
@@ -68,19 +70,45 @@ async def movie_details(movie_id: int):
     return await serializers.Movie.from_tortoise_orm(movie)
 
 
-@app.post("/movies/rent/")
+@app.post("/movies/rent")
 async def rent_movie(
-    movie: serializers.Movie, user: serializers.User = Depends(current_user)  # type: ignore
+    movie: serializers.MovieID, user: serializers.User = Depends(current_user)
 ):
     """Rent a specific movie."""
-    movie = await models.Movie.get(id=movie.id)  # type: ignore
+    movie = await models.Movie.get(id=movie.id)
     user = await models.User.get(id=user.id)
     await models.Rent.create(movie=movie, user=user)
     return await serializers.Movie.from_tortoise_orm(movie)
 
 
-@app.get("/me/movies")
+@app.get("/users/me/movies")
 async def list_rented_movie(user: serializers.User = Depends(current_user)):
-    """List movies that have been rent."""
+    """List movies that have been rented."""
     movies_queryset = models.Movie.filter(rents__user__id=user.id)
     return await serializers.MovieList.from_queryset(movies_queryset)
+
+
+@app.post("/movies/return")
+async def return_movie(
+    movie: serializers.MovieID, user: serializers.User = Depends(current_user)
+):
+    """Return a rented movie."""
+    movie = await models.Movie.get(id=movie.id)
+    user = await models.User.get(id=user.id)
+    rent = await models.Rent.get(movie=movie, user=user)
+
+    delta = (date.today() - rent.date).days
+    user.balance -= calculate_cost_for(delta or 1)
+    await user.save()
+    await rent.delete()
+    return await serializers.Movie.from_tortoise_orm(movie)
+
+
+def calculate_cost_for(days):
+    charges_per_day = chain(repeat(1.0, 3), repeat(0.5))
+    return sum(islice(charges_per_day, 0, days))
+
+
+@app.get("/movies/cost/{days}")
+async def return_cost_estimate(days: int):
+    return calculate_cost_for(days)
