@@ -1,25 +1,15 @@
-from fastapi_users import models
-from fastapi_users.db import TortoiseBaseUserModel, TortoiseUserDatabase
+from enum import Enum
+
+from fastapi_users.db import TortoiseBaseUserModel
+from tortoise.models import Model
+from tortoise import fields
 
 
-class User(models.BaseUser):
+class User(TortoiseBaseUserModel):
     pass
 
 
-class UserDB(User, models.BaseUserDB):
-    pass
-
-
-class UserCreate(models.BaseUserCreate):
-    pass
-
-
-class UserUpdate(User, models.BaseUserUpdate):
-    pass
-
-
-class UserModel(TortoiseBaseUserModel):
-    pass
-
-
-user_db = TortoiseUserDatabase(UserDB, UserModel)
+class Movie(Model):
+    title = fields.CharField(max_length=100)
+    year = fields.IntField()
+    genre = fields.CharField(max_length=10)
