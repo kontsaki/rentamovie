@@ -21,4 +21,8 @@ class UserUpdate(User, BaseUserUpdate):
 
 
 Movie = pydantic_model_creator(models.Movie, name="Movie")
-MovieList = pydantic_queryset_creator(models.Movie, name="MovieList")
+MovieList = pydantic_queryset_creator(
+    models.Movie, name="MovieList", exclude=("year", "genre")
+)
+
+Rent = pydantic_model_creator(models.Rent, name="Rent")

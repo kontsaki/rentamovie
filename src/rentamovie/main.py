@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from tortoise.contrib.fastapi import register_tortoise
 from fastapi_users import FastAPIUsers
 from fastapi_users.db import TortoiseUserDatabase
@@ -44,8 +44,27 @@ app.include_router(
     tags=["users"],
 )
 
+current_user = fastapi_users.current_user()
+
 
 @app.get("/movies")
-async def main():
+async def list_movies():
+    """List all available for renting movies."""
     movies_queryset = models.Movie.all()
+    return await serializers.MovieList.from_queryset(movies_queryset)
+
+
+@app.get("/movies/rent/{movie_id}")
+async def rent_movie(movie_id: int, user: serializers.User = Depends(current_user)):
+    """Rent a specific movie."""
+    movie = await models.Movie.get(id=movie_id)
+    user = await models.User.get(id=user.id)
+    await models.Rent.create(movie=movie, user=user)
+    return await serializers.Movie.from_tortoise_orm(movie)
+
+
+@app.get("/me/movies")
+async def list_rented_movie(user: serializers.User = Depends(current_user)):
+    """List movies that have been rent."""
+    movies_queryset = models.Movie.filter(rents__user__id=user.id)
     return await serializers.MovieList.from_queryset(movies_queryset)
