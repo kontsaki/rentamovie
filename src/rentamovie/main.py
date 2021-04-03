@@ -1,3 +1,4 @@
+import os
 from typing import Dict, Optional, Union
 from datetime import date
 from itertools import chain, repeat, islice
@@ -11,7 +12,8 @@ from fastapi_users.db import TortoiseUserDatabase
 from .authentication import jwt_auth
 from . import models, serializers
 
-DATABASE_URL = "sqlite://:memory:"
+DATABASE_TYPE = os.environ.get("APP_DATABASE")
+DATABASE_URL = f"sqlite://{DATABASE_TYPE}"
 
 app = FastAPI()
 
@@ -33,13 +35,13 @@ register_tortoise(
 
 app.include_router(
     fastapi_users.get_auth_router(jwt_auth),
-    prefix="/auth/jwt",
+    prefix="",
     tags=["auth"],
 )
 
 app.include_router(
     fastapi_users.get_register_router(),
-    prefix="/auth",
+    prefix="",
     tags=["auth"],
 )
 

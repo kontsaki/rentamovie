@@ -27,7 +27,7 @@ def client() -> Generator:
             )
         )
         response = test_client.post(
-            "/auth/jwt/login",
+            "/login",
             data={"username": TEST_USER_EMAIL, "password": TEST_USER_PASSWORD},
         )
         assert response.status_code == 200
@@ -35,7 +35,7 @@ def client() -> Generator:
             {"Authorization": f"Bearer {response.json()['access_token']}"}
         )
         yield test_client
-    finalizer()
+    # finalizer()
 
 
 @pytest.fixture()
