@@ -210,6 +210,15 @@ def test_return_movie(client, event_loop):
     assert client.get("/users/me").json()["balance"] == -1.0
 
 
+def test_return_non_existing_movie(client, event_loop):
+    event_loop.run_until_complete(create_movies())
+
+    response = client.post("/movies/return", json={"id": len(SAMPLE_MOVIES) + 100})
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Movie does not exist."
+
+
 def test_cannot_return_same_movie_twice_or_not_rented_movie(client, event_loop):
     event_loop.run_until_complete(create_movies())
     assert client.post("/movies/rent", json={"id": 1}).status_code == 200
