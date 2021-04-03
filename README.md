@@ -15,4 +15,8 @@ There is also support for docker and the `dev.sh` script provides useful docker 
 After building the docker image, executing `dev.sh` will serve the API with uvicorn on http://127.0.0.1:8000
 To play around with the app through the browser, visit http://127.0.0.1:8000/docs
 for the interactive OpenAPI documentation, use the top right `Authorize` button with 
-the following credentials, username: `testuser@email.gr`, password: `123321` and have fun!
+the following credentials and have fun!
+
+username: `testuser@email.gr`
+
+password: `123321`
