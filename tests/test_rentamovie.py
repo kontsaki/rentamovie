@@ -173,6 +173,15 @@ def test_cannot_rent_same_movie_twice(client, event_loop):
     assert response.json()["detail"] == "Cannot rent same movie twice."
 
 
+def test_rent_non_existing_movie(client, event_loop):
+    event_loop.run_until_complete(create_movies())
+
+    response = client.post("/movies/rent", json={"id": len(SAMPLE_MOVIES) + 100})
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Movie does not exist."
+
+
 def test_get_user_balance(client):
     response = client.get("/users/me")
 

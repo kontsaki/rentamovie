@@ -78,7 +78,10 @@ async def rent_movie(
     movie: serializers.MovieID, user: serializers.User = Depends(current_user)
 ):
     """Rent a specific movie."""
-    movie = await models.Movie.get(id=movie.id)
+    try:
+        movie = await models.Movie.get(id=movie.id)
+    except exceptions.DoesNotExist:
+        raise HTTPException(status_code=400, detail="Movie does not exist.")
     user = await models.User.get(id=user.id)
     try:
         await models.Rent.create(movie=movie, user=user)
