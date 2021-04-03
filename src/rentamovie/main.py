@@ -63,7 +63,7 @@ async def list_movies(genre: Optional[str] = None, year: Optional[int] = None):
     if genre:
         query["genre"] = genre
     movies_queryset = models.Movie.filter(**query)
-    return await serializers.MovieList.from_queryset(movies_queryset)
+    return await serializers.MovieLongList.from_queryset(movies_queryset)
 
 
 @app.get("/movies/{movie_id}")
@@ -91,7 +91,7 @@ async def rent_movie(
 async def list_rented_movie(user: serializers.User = Depends(current_user)):
     """List movies that have been rented."""
     movies_queryset = models.Movie.filter(rents__user__id=user.id)
-    return await serializers.MovieList.from_queryset(movies_queryset)
+    return await serializers.MovieShortList.from_queryset(movies_queryset)
 
 
 @app.post("/movies/return")

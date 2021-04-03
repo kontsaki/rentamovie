@@ -26,8 +26,9 @@ class MovieID(BaseModel):
 
 
 Movie = pydantic_model_creator(models.Movie, name="Movie")
-MovieList = pydantic_queryset_creator(
-    models.Movie, name="MovieList", exclude=("year", "genre")
+MovieShortList = pydantic_queryset_creator(
+    models.Movie, name="MovieShortList", exclude=("year", "genre")
 )
+MovieLongList = pydantic_queryset_creator(models.Movie, name="MovieLongList")
 
 Rent = pydantic_model_creator(models.Rent, name="Rent")

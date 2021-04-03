@@ -65,8 +65,10 @@ def test_list_movies(client, event_loop):
         {
             "id": pk,
             "title": title,
+            "year": year,
+            "genre": genre,
         }
-        for pk, (title, *_) in enumerate(SAMPLE_MOVIES, start=1)
+        for pk, (title, year, genre) in enumerate(SAMPLE_MOVIES, start=1)
     ]
 
 
@@ -80,8 +82,10 @@ def test_list_movies_filter_by_year(client, event_loop):
         {
             "id": pk,
             "title": title,
+            "year": year,
+            "genre": genre,
         }
-        for pk, (title, year, _) in enumerate(SAMPLE_MOVIES, start=1)
+        for pk, (title, year, genre) in enumerate(SAMPLE_MOVIES, start=1)
         if year == 2005
     ]
 
@@ -96,6 +100,8 @@ def test_list_movies_filter_by_year_and_genre(client, event_loop):
         {
             "id": pk,
             "title": title,
+            "year": year,
+            "genre": genre,
         }
         for pk, (title, year, genre) in enumerate(SAMPLE_MOVIES, start=1)
         if year == 2005 and genre == "action"
