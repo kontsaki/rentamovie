@@ -157,6 +157,16 @@ def test_rent_movie(client, event_loop):
     ]
 
 
+def test_cannot_rent_same_movie_twice(client, event_loop):
+    event_loop.run_until_complete(create_movies())
+    assert client.post("/movies/rent", json={"id": 1}).status_code == 200
+
+    response = client.post("/movies/rent", json={"id": 1})
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Cannot rent same movie twice."
+
+
 def test_get_user_balance(client):
     response = client.get("/users/me")
 
@@ -183,6 +193,17 @@ def test_return_movie(client, event_loop):
 
     assert client.get("/users/me/movies").json() == []
     assert client.get("/users/me").json()["balance"] == -1.0
+
+
+def test_cannot_return_same_movie_twice_or_not_rented_movie(client, event_loop):
+    event_loop.run_until_complete(create_movies())
+    assert client.post("/movies/rent", json={"id": 1}).status_code == 200
+    assert client.post("/movies/return", json={"id": 1}).status_code == 200
+
+    response = client.post("/movies/return", json={"id": 1})
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "This movie was not rented."
 
 
 async def create_rent(movie_id, days):
@@ -213,3 +234,12 @@ def test_return_movie_cost_per_day(days, cost, client, event_loop):
     assert client.get("/users/me").json()["balance"] == -cost
 
     assert client.get(f"/movies/cost/{days}").text == str(cost)
+
+
+@pytest.mark.parametrize(
+    "method, url",
+    [("get", "/users/me/movies"), ("post", "/movies/rent"), ("post", "/movies/return")],
+)
+def test_endpoints_with_mandatory_authentication(method, url):
+    with TestClient(app) as client:
+        assert getattr(client, method)(url).status_code == 401

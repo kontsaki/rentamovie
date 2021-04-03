@@ -19,3 +19,6 @@ class Rent(Model):
     user = fields.ForeignKeyField("models.User")
     movie = fields.ForeignKeyField("models.Movie")
     date = fields.DateField(default=date.today)
+
+    class Meta:
+        unique_together = (("user", "movie"),)

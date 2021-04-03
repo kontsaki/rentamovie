@@ -2,7 +2,8 @@ from typing import Dict, Optional, Union
 from datetime import date
 from itertools import chain, repeat, islice
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
+from tortoise import exceptions
 from tortoise.contrib.fastapi import register_tortoise
 from fastapi_users import FastAPIUsers
 from fastapi_users.db import TortoiseUserDatabase
@@ -77,7 +78,10 @@ async def rent_movie(
     """Rent a specific movie."""
     movie = await models.Movie.get(id=movie.id)
     user = await models.User.get(id=user.id)
-    await models.Rent.create(movie=movie, user=user)
+    try:
+        await models.Rent.create(movie=movie, user=user)
+    except exceptions.IntegrityError:
+        raise HTTPException(status_code=400, detail="Cannot rent same movie twice.")
     return await serializers.Movie.from_tortoise_orm(movie)
 
 
@@ -95,7 +99,10 @@ async def return_movie(
     """Return a rented movie."""
     movie = await models.Movie.get(id=movie.id)
     user = await models.User.get(id=user.id)
-    rent = await models.Rent.get(movie=movie, user=user)
+    try:
+        rent = await models.Rent.get(movie=movie, user=user)
+    except exceptions.DoesNotExist:
+        raise HTTPException(status_code=400, detail="This movie was not rented.")
 
     delta = (date.today() - rent.date).days
     user.balance -= calculate_cost_for(delta or 1)
